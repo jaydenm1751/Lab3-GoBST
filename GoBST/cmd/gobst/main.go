@@ -11,7 +11,7 @@ func main() {
 	hashWorkers := flag.Int("hash-workers", 1, "number of hash workers (ignored in step 1)")
 	dataWorkers := flag.Int("data-workers", 1, "number of data workers (ignored in step 1)")
 	compWorkers := flag.Int("comp-workers", 1, "number of compare workers (ignored in step 1)")
-	input := flag.String("input", "testdata/simple.txt", "path to input file")
+	input := flag.String("input", "testdata/tiny.txt", "path to input file")
 
 	flag.Parse()
 	_ = hashWorkers
@@ -22,6 +22,10 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	// fmt.Printf("hash-workers: %d\n", *hashWorkers)
+	// fmt.Printf("data-workers: %d\n", *dataWorkers)
+	// fmt.Printf("comp-workers: %d\n", *compWorkers)
+
 
 	fmt.Printf("Processed %d trees (sequential baseline).\n", len(hashes))
 }

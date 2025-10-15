@@ -55,9 +55,9 @@ func Sequential(inputPath string) ([]int, error) {
 					eq = append(eq, j)
 				}
 			}
-
+			//sort.Ints(eq)
 			for _, k := range eq {
-				//groups[k] = append([]int(nil), eq...)
+				// groups[k] = append([]int(nil), eq...)
 				groups[k] = eq
 			}
 		}
@@ -68,11 +68,11 @@ func Sequential(inputPath string) ([]int, error) {
 		fmt.Printf("%d: %v\n", i, groups[i])
 		//fmt.Printf("%d: hash=%03d identical=%v\n", i, hashes[i], groups[i])
 	}
-	// for i := 0; i < n; i++ {
-	// 	///sort.Ints(groups[i])
-	// 	fmt.Printf("%d: %v\n", i , hashes[i])
-	// 	//fmt.Printf("%d: hash=%03d identical=%v\n", i, hashes[i], groups[i])
-	// }
+	for i := 0; i < n; i++ {
+		///sort.Ints(groups[i])
+		fmt.Printf("%d: %v\n", i , hashes[i])
+		//fmt.Printf("%d: hash=%03d identical=%v\n", i, hashes[i], groups[i])
+	}
 
 	return hashes, nil
 

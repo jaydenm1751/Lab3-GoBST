@@ -22,10 +22,16 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	fmt.Printf("Processed %d trees (sequential baseline).\n", len(hashes))
+
+	hashes, err = driver.Parallel(*input, *dataWorkers, *hashWorkers, *compWorkers)
+	if err != nil {
+		panic(err)
+	}
 	// fmt.Printf("hash-workers: %d\n", *hashWorkers)
 	// fmt.Printf("data-workers: %d\n", *dataWorkers)
 	// fmt.Printf("comp-workers: %d\n", *compWorkers)
 
 
-	fmt.Printf("Processed %d trees (sequential baseline).\n", len(hashes))
+	fmt.Printf("Processed %d trees in Parallel.\n", len(hashes))
 }

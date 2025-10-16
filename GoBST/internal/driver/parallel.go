@@ -1,182 +1,187 @@
-package driver
+// package driver
 
-import (
-	"fmt"
-	"gobst/internal/bst"
-	"os"
-	"sync"
-	//"time"
-	"sync/atomic"
-	"sort"
-)
+// import (
+// 	"fmt"
+// 	"gobst/internal/bst"
+// 	"os"
+// 	"sync"
+// 	//"time"
+// 	"sync/atomic"
+// 	"sort"
+// )
 
-type line struct {
-	id int
-	vals []int
-}
+// type line struct {
+// 	id int
+// 	vals []int
+// }
 
-type built struct {
-	id int
-	tree *bst.Tree
-}
+// type built struct {
+// 	id int
+// 	tree *bst.Tree
+// }
 
-type hash struct {
-	id int
-	tree *bst.Tree
-	hash int
-}
+// type hash struct {
+// 	id int
+// 	tree *bst.Tree
+// 	hash int
+// }
 
-func processBucket(bucket []hash, groups *[][]int) {
-	visited := make([]bool, len(bucket))
-	for i := 0; i < len(bucket); i++ {
-		if visited[i] {
-			continue
-		}
-		visited[i] = true
-		eq := []int{bucket[i].id}
-		for j := i + 1; j < len(bucket); j++ {
-			if visited[j] {
-				continue
-			}
-			if bucket[i].tree.Equal(bucket[j].tree){
-				visited[j] = true
-				eq = append(eq, bucket[j].id)
-			}
-		}
+// func processBucket(bucket []hash, groups *[][]int) {
+// 	visited := make([]bool, len(bucket))
+// 	for i := 0; i < len(bucket); i++ {
+// 		if visited[i] {
+// 			continue
+// 		}
+// 		visited[i] = true
+// 		eq := []int{bucket[i].id}
+// 		for j := i + 1; j < len(bucket); j++ {
+// 			if visited[j] {
+// 				continue
+// 			}
+// 			if bucket[i].tree.Equal(bucket[j].tree){
+// 				visited[j] = true
+// 				eq = append(eq, bucket[j].id)
+// 			}
+// 		}
 
-		sort.Ints(eq)
-		for _, k := range eq {
-			(*groups)[k] = append([]int(nil), eq...)
-		}
+// 		sort.Ints(eq)
+// 		for _, k := range eq {
+// 			(*groups)[k] = append([]int(nil), eq...)
+// 		}
 		
-	}
-}
+// 	}
+// }
 
 
-func Parallel(inputPath string, dataWorkers, hashWorkers, compWorkers int) ([]int, error){
-	f, err := os.Open(inputPath)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-	lines, err := parseInput(f)
-	if err != nil { return nil, err }
+// func Parallel(inputPath string, dataWorkers, hashWorkers, compWorkers int) ([]int, error){
+// 	f, err := os.Open(inputPath)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	defer f.Close()
+// 	lines, err := parseInput(f)
+// 	if err != nil { return nil, err }
 
 
-	//we follow the sequential algorithm i guess in 3 phases, 1 data workers build each line, 
-	// 2 hash workers compute hashes of each bst, comp workers find duplicate bsts
+// 	//we follow the sequential algorithm i guess in 3 phases, 1 data workers build each line, 
+// 	// 2 hash workers compute hashes of each bst, comp workers find duplicate bsts
 
-	n := len(lines)
-	//start := time.Now()
+// 	n := len(lines)
+// 	//start := time.Now()
 
-	inCh := make(chan line, 64)
-	builtCh := make(chan built, 64)
-	hashCh := make(chan hash, 64)
+// 	inCh := make(chan line, 64)
+// 	builtCh := make(chan built, 64)
+// 	hashCh := make(chan hash, 64)
 
-	var wgD sync.WaitGroup
-	// for i, vals := range lines {
-	// 	t := bst.New()
-	// 	for _, v := range vals{
-	// 		t.Insert(v)
-	// 	}
-	// 	trees[i] = t
-	// }
+// 	var wgD sync.WaitGroup
+// 	// for i, vals := range lines {
+// 	// 	t := bst.New()
+// 	// 	for _, v := range vals{
+// 	// 		t.Insert(v)
+// 	// 	}
+// 	// 	trees[i] = t
+// 	// }
 
-	if dataWorkers < 1 { dataWorkers = 1 }
-	if hashWorkers < 1 { hashWorkers = 1 }
-	if compWorkers < 1 { compWorkers = 1 }
+// 	if dataWorkers < 1 { dataWorkers = 1 }
+// 	if hashWorkers < 1 { hashWorkers = 1 }
+// 	if compWorkers < 1 { compWorkers = 1 }
 
-	for w := 0; w < dataWorkers; w++ {
-		wgD.Add(1)
-		go func() {
-			defer wgD.Done()
-			for i := range inCh {
-				t := bst.New()
-				for _, v := range i.vals{
-					t.Insert(v)
-				}
-				builtCh <- built{id: i.id, tree: t}
-			}
-		}()
-	}
-	go func() {
-		wgD.Wait()
-		close(builtCh)
-	}()
+// 	for w := 0; w < dataWorkers; w++ {
+// 		wgD.Add(1)
+// 		go func() {
+// 			defer wgD.Done()
+// 			for i := range inCh {
+// 				t := bst.New()
+// 				for _, v := range i.vals{
+// 					t.Insert(v)
+// 				}
+// 				builtCh <- built{id: i.id, tree: t}
+// 			}
+// 		}()
+// 	}
+// 	go func() {
+// 		wgD.Wait()
+// 		close(builtCh)
+// 	}()
 
-	go func() {
-		for i, v := range lines {
-			inCh <- line{id: i, vals: v}
-		}
-		close(inCh)
-	}()
+// 	go func() {
+// 		for i, v := range lines {
+// 			inCh <- line{id: i, vals: v}
+// 		}
+// 		close(inCh)
+// 	}()
 	
 
-	// part 2 the hashworkers
+// 	// part 2 the hashworkers
 
-	var wgH sync.WaitGroup
-	for h := 0; h < hashWorkers; h++ {
-		wgH.Add(1)
-		go func() {
-			defer wgH.Done()
-			for t := range builtCh {
-				hsh := t.tree.HashValue()
-				hashCh <- hash{id: t.id, tree: t.tree, hash: hsh}
-			}
+// 	//implementation A
+// 	var wgH sync.WaitGroup
+// 	for h := 0; h < hashWorkers; h++ {
+// 		wgH.Add(1)
+// 		go func() {
+// 			defer wgH.Done()
+// 			for t := range builtCh {
+// 				hsh := t.tree.HashValue()
+// 				hashCh <- hash{id: t.id, tree: t.tree, hash: hsh}
+// 			}
 		
-		}()
-	}
+// 		}()
+// 	}
 
-	go func() {	
-		wgH.Wait()
-		close(hashCh)
-	}()
+// 	go func() {	
+// 		wgH.Wait()
+// 		close(hashCh)
+// 	}()
 
-	//Step 3 compare the hashes with the actual equivalent trees
-	hashes := make([]int, n)
-	mp := make(map[int][]hash) 
-	for h := range hashCh {
-		mp[h.hash] = append(mp[h.hash], h)
-		hashes[h.id] = h.hash
-	}
-	bucketList := make([][]hash, 0, len(mp))
-	for _, b := range mp { bucketList = append(bucketList, b) }
+// 	//Step 3 compare the hashes with the actual equivalent trees
 	
-	groups := make([][]int, n)
+	
+// 	// hashes := make([]int, n)
+// 	// mp := make(map[int][]hash) 
+// 	// for h := range hashCh {
+// 	// 	mp[h.hash] = append(mp[h.hash], h)
+// 	// 	hashes[h.id] = h.hash
+// 	// }
+// 	// bucketList := make([][]hash, 0, len(mp))
+// 	// for _, b := range mp { bucketList = append(bucketList, b) }
+	
+// 	// groups := make([][]int, n)
 
-	var idx int64
-	var wgC sync.WaitGroup
+// 	// var idx int64
+// 	// var wgC sync.WaitGroup
 
-	for c := 0; c < compWorkers; c++{
-		wgC.Add(1)
-		go func() {
-			defer wgC.Done()
-			for { //implement work stealing optimization instead of job dependence
-				i:= int(atomic.AddInt64(&idx, 1)) - 1
-				if i  >= len(bucketList) {
-					return
-				}
-				processBucket(bucketList[i], &groups)
-			}
-		}()
-	}
+// 	// for c := 0; c < compWorkers; c++{
+// 	// 	wgC.Add(1)
+// 	// 	go func() {
+// 	// 		defer wgC.Done()
+// 	// 		for { //implement work stealing optimization instead of job dependence
+// 	// 			i:= int(atomic.AddInt64(&idx, 1)) - 1
+// 	// 			if i  >= len(bucketList) {
+// 	// 				return
+// 	// 			}
+// 	// 			processBucket(bucketList[i], &groups)
+// 	// 		}
+// 	// 	}()
+// 	// }
 
-	wgC.Wait()
+// 	// wgC.Wait()
 
 
-	//printing
-	fmt.Println("== Step 2 Results ==")
-	for i := 0; i < n; i++ {
-		sort.Ints(groups[i])
-		fmt.Printf("%d: %v\n", i, groups[i])
-		//fmt.Printf("%d: hash=%03d identical=%v\n", i, hashes[i], groups[i])
-	}
-	for i := 0; i < n; i++ {
-		///sort.Ints(groups[i])
-		fmt.Printf("%d: %v\n", i , hashes[i])
-		//fmt.Printf("%d: hash=%03d identical=%v\n", i, hashes[i], groups[i])
-	}
 
-	return hashes, nil
 
-}
+// 	//printing
+// 	fmt.Println("== Step 2 Results ==")
+// 	for i := 0; i < n; i++ {
+// 		sort.Ints(groups[i])
+// 		fmt.Printf("%d: %v\n", i, groups[i])
+// 		//fmt.Printf("%d: hash=%03d identical=%v\n", i, hashes[i], groups[i])
+// 	}
+// 	for i := 0; i < n; i++ {
+// 		///sort.Ints(groups[i])
+// 		fmt.Printf("%d: %v\n", i , hashes[i])
+// 		//fmt.Printf("%d: hash=%03d identical=%v\n", i, hashes[i], groups[i])
+// 	}
+
+// 	return hashes, nil
+
+// }

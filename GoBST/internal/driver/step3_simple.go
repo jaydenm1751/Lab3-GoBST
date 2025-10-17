@@ -9,7 +9,7 @@ import (
 
 func Step3Simple(trees []*bst.Tree, buckets map[int][]int) [][]bool {
 	n := len(trees)
-	adj := makeAdj(n)
+	adj := MakeAdj(n)
 
 	t_map := TreesIndex(trees)
 	
@@ -18,7 +18,7 @@ func Step3Simple(trees []*bst.Tree, buckets map[int][]int) [][]bool {
 
 	for _, ids := range buckets {
 		if len(ids) < 2 { continue }
-		for _, p := range buildPairs(ids){
+		for _, p := range BuildPairs(ids){
 			wg.Add(1)
 			go func(p pair){
 				defer wg.Done()

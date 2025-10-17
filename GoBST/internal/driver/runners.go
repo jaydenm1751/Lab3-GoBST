@@ -10,6 +10,7 @@ type ParallelRes struct {
 	Trees []*bst.Tree
 }
 
+
 func Step2Run(lines [][]int, dataWorkers, hashWorkers int) (ParallelRes) {
 	var trees []*bst.Tree
 	trees = buildParallel(lines, dataWorkers)
@@ -26,6 +27,8 @@ func Step2Run(lines [][]int, dataWorkers, hashWorkers int) (ParallelRes) {
 	return ParallelRes{Buckets: buckets, Hashes: hashes, Trees: trees}
 }
 
-func Step3Run() {
-	
+func Step3Run(buckets map[int][]int, hashes []int, trees []*bst.Tree, compWorkers int) [][]int {
+	n := len(trees)
+	groups := make([][]int, n)
+	return groups
 }

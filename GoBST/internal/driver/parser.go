@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func parseInput(r io.Reader) ([][]int, error){
+func ParseInput(r io.Reader) ([][]int, error){
 	var groups [][]int
 	sc := bufio.NewScanner(r)
 	for sc.Scan(){

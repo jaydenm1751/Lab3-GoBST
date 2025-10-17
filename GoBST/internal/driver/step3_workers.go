@@ -66,7 +66,7 @@ func (b *buffer) close() {
 
 func Step3Workers(trees []*bst.Tree, buckets map[int][]int, compWorkers int) [][]bool {
 	n := len(trees)
-	adj := makeAdj(n)
+	adj := MakeAdj(n)
 
 	t_map := TreesIndex(trees)
 	queue := newBuffer(compWorkers)
@@ -91,7 +91,7 @@ func Step3Workers(trees []*bst.Tree, buckets map[int][]int, compWorkers int) [][
 
 	for _, ids := range buckets {
 		if len(ids) < 2 { continue }
-		for _, p := range buildPairs(ids) {
+		for _, p := range BuildPairs(ids) {
 			queue.put(p)
 		}
 	}

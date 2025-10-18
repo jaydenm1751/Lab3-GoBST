@@ -3,6 +3,7 @@ package driver
 import (
 	"gobst/internal/bst"
 	"sync"
+	"fmt"
 )
 
 func Step2Mutexes(trees []*bst.Tree, hashWorkers int) (map[int][]int, []int){
@@ -16,6 +17,8 @@ func Step2Mutexes(trees []*bst.Tree, hashWorkers int) (map[int][]int, []int){
 	var wg sync.WaitGroup
 	var lock sync.Mutex
 
+	fmt.Printf("reaching the for loop\n")
+
 	for h := 0; h < hashWorkers; h++ {
 		wg.Add(1)
 		go func() {
@@ -23,6 +26,7 @@ func Step2Mutexes(trees []*bst.Tree, hashWorkers int) (map[int][]int, []int){
 			for t := range jobs {
 				h := trees[t].HashValue()
 				lock.Lock()
+				hashes[t] = h
 				buckets[h] = append(buckets[h], t)
 				lock.Unlock()
 			}
@@ -32,8 +36,8 @@ func Step2Mutexes(trees []*bst.Tree, hashWorkers int) (map[int][]int, []int){
 	for i := 0; i < n; i++ {
 		jobs <- i
 	}
-	wg.Wait()
 	close(jobs)
+	wg.Wait()
 
 	return buckets, hashes
 }

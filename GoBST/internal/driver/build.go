@@ -4,6 +4,7 @@ import (
 	//stuff
 	"gobst/internal/bst"
 	"sync"
+	"fmt"
 )
 
 func BuildTreesSequential(lines [][]int) []*bst.Tree{
@@ -47,10 +48,16 @@ func BuildTreesParallel(lines [][]int, dataWorkers int) []*bst.Tree {
 			}
 		}()
 	}
-	go func() {
-		wg.Wait()
-		close(jobs)
-	}()
+	for i := 0; i < n; i++ { jobs <- i }
+	close(jobs)
+	wg.Wait()
+
+	for i, t := range res {
+		if t == nil {
+			panic(fmt.Errorf("build produced nil tree at index %d", i))
+		}
+	}
+
 
 	return res
 }

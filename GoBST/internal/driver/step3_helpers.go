@@ -3,7 +3,7 @@ package driver
 import (
 	"gobst/internal/bst"
 	"sort"
-	"fmt"
+	// "fmt"
 )
 
 type pair struct {
@@ -78,12 +78,12 @@ func CompareSequential(lines [][]int, trees []*bst.Tree, buckets map[int][]int) 
 			}
 		}
 	}
-	fmt.Println("== Step 1 Results ==")
-	for i := 0; i < n; i++ {
-		///sort.Ints(groups[i])
-		fmt.Printf("%d: %v\n", i, groups[i])
-		//fmt.Printf("%d: hash=%03d identical=%v\n", i, hashes[i], groups[i])
-	}
+	// fmt.Println("== Step 1 Results ==")
+	// for i := 0; i < n; i++ {
+	// 	///sort.Ints(groups[i])
+	// 	fmt.Printf("%d: %v\n", i, groups[i])
+	// 	//fmt.Printf("%d: hash=%03d identical=%v\n", i, hashes[i], groups[i])
+	// }
 	// for i := 0; i < n; i++ {
 	// 	///sort.Ints(groups[i])
 	// 	fmt.Printf("%d: %v\n", i , hashes[i])

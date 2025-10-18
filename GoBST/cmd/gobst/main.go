@@ -45,7 +45,7 @@ func main() {
 	f := openMust(*input)
 	defer f.Close()
 
-	lines, err := driver.ParseInput(f) // MUST be exported (capital P)
+	lines, err := driver.ParseInput(f)
 	if err != nil {
 		fatal(err)
 	}
@@ -89,6 +89,7 @@ func main() {
 
 	case *hashWorkers > 1 && *dataWorkers == *hashWorkers:
 		// Step 2B: per spec — hash workers update shared map guarded by a single global mutex
+		fmt.Printf("entering step2 mutexes\n")
 		buckets, hashes = driver.Step2Mutexes(trees, *hashWorkers)
 
 	default:
@@ -97,15 +98,13 @@ func main() {
 	}
 
 	// 4) Step 3 selection:
-	//    comp-workers <= 1  => sequential comparisons
-	//    comp-workers > 1   => pool + bounded buffer (no extra flag)
-	groups := make([][]int, n)
+	//fmt.Printf("exited switch\n")
+	var groups [][]int
 
 	if *compWorkers <= 1 {
 		groups = driver.CompareSequential(lines, trees, buckets)
 	} else {
-		var adj [][]bool
-		adj = driver.Step3Workers(trees, buckets, *compWorkers)
+		adj := driver.Step3Workers(trees, buckets, *compWorkers)
 		groups = driver.AdjToGroups(adj)
 	}
 

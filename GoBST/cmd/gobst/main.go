@@ -132,16 +132,18 @@ func main() {
 	var groups [][]int
 	compareStart := time.Now()
 
-	if *compWorkers <= 1 {
+	if *compWorkers == 1 {
 		for _, h := range keys {
 			ids := append([]int(nil), buckets[h]...)
 			sort.Ints(ids)
 			gs := driver.CompareBucketSequential(trees, ids)
 			groups = append(groups, gs...) // append classes
 		}
-	} else {
+	} else  if *compWorkers <= 0{ //implementation A
 		adj := driver.Step3Simple(trees, buckets) // Step 3 implementation A
-		// adj := driver.Step3Workers(trees, buckets, *compWorkers) //Step 3 implementation B
+		groups = driver.AdjToGroups(adj)
+	} else { //implementation B
+		adj := driver.Step3Workers(trees, buckets, *compWorkers) //Step 3 implementation B
 		groups = driver.AdjToGroups(adj)
 	}
 	compareTime := time.Since(compareStart)
@@ -192,11 +194,11 @@ func main() {
 	// 5) Convert adj to groups (for the same output format you’ve been using) and print hashes
 	//printOutput(groups, buckets)
 	overallTime := time.Since(overallStart)
-	totalTime := buildTime + hashTime + compareTime
+	totalTime := buildTime + hashTime + compareTime + hashGroupTime
 
-	fmt.Printf("Overall_Time,Total_Time,Build_Time,Hash_time,Compare_Time\n")
-	fmt.Printf("%.9f,%.9f,%.9f,%.9f,%.9f\n", overallTime.Seconds(), totalTime.Seconds(), 
-		buildTime.Seconds(), hashTime.Seconds(), compareTime.Seconds())
+	fmt.Printf("Overall_Time,Total_Time,Build_Time,Hash_time,HashGroup_Time,Compare_Time\n")
+	fmt.Printf("%.9f,%.9f,%.9f,%.9f,%.9f,%.9f\n", overallTime.Seconds(), totalTime.Seconds(), 
+		buildTime.Seconds(), hashTime.Seconds(), hashGroupTime.Seconds(), compareTime.Seconds())
 
 
 	fmt.Printf("Processed %d trees.\n", n)

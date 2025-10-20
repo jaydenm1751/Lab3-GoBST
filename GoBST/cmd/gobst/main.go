@@ -7,6 +7,7 @@ import (
 	"gobst/internal/driver"
 	"os"
 	"sort"
+	"time"
 )
 
 func fatal(err error) {
@@ -22,42 +23,6 @@ func openMust(path string) *os.File {
 	return f
 }
 
-// func printOutput(buckets map[int][]int,
-// 	groups [][]int,
-// 	//hashTime, hashGroupTime, compareTime time.Duration,
-// ) {
-
-// 	//hash time
-// 	// fmt.Printf("hashTime: %.9f\n", hashTime.Seconds())
-// 	// fmt.Printf("hashGroupTime: %.9f\n", hashGroupTime.Seconds())
-
-// 	keys := make([]int, 0, len(buckets))
-// 	for k := range buckets {
-// 		if (len(buckets[k]) <= 1) {
-// 			continue
-// 		}
-// 		keys = append(keys, k)
-// 	}
-// 	sort.Ints(keys)
-// 	for _, h := range keys {
-// 		ids := append([]int(nil), buckets[h]...)
-// 		sort.Ints(ids)
-// 		fmt.Printf("%d: ", h)
-// 		for _, v := range ids {
-// 			fmt.Printf("%d ", v)
-// 		}
-// 		fmt.Println()
-// 	}
-
-// 	//compare tree time
-// 	// fmt.Printf("hashTime: %.9f\n", hashTime.Seconds())
-// 	// fmt.Printf("compareTreeTime: %.9f\n", hashGroupTime.Seconds())
-
-// 	for i := range groups {
-// 		sort.Ints(groups[i])
-// 		fmt.Printf("%d: %v\n", i, groups[i])
-// 	}
-// }
 
 func main() {
 	// Flags per spec
@@ -81,67 +46,91 @@ func main() {
 		return
 	}
 
+	overallStart := time.Now()
+
 	// 2) Build trees (you said you’re keeping parallel build — that’s fine)
+	buildStart := time.Now()
 	var trees []*bst.Tree
 	if *dataWorkers > 1 {
 		trees = driver.BuildTreesParallel(lines, *dataWorkers) // MUST be exported
 	} else {
 		trees = driver.BuildTreesSequential(lines) // MUST be exported
 	}
+	buildTime := time.Since(buildStart)
 
 	// 3) Step 2 selection (per your mapping in the spec):
+	//hashStart := time.Now()
 	var (
 		buckets map[int][]int
 		//hashes  []int
+		hashTime      time.Duration
+    	hashGroupTime time.Duration
 	)
 
 	switch {
 	case *hashWorkers == 1 && *dataWorkers == 1:
 		// simple sequential hashing: loop in main
-		buckets = make(map[int][]int)
-		//hashes = make([]int, n)
+		start := time.Now()
+		hashes := make([]int, n)
 		for id, t := range trees {
-			h := t.HashValue()
-			// hashes[id] = h
+			hashes[id] = t.HashValue()
+		}
+		hashTime = time.Since(start)
+		s2 := time.Now()
+
+		for id, h := range hashes {
+			if buckets == nil { buckets = make(map[int][]int, n) }
 			buckets[h] = append(buckets[h], id)
 		}
+		hashGroupTime = time.Since(s2) + hashTime
 
 	case *hashWorkers > 1 && *dataWorkers == 1:
 		// Step 2A: per spec — hashing goroutines send (id,hash) to a single collector via channel
-		buckets = driver.Step2Chan(trees, *hashWorkers)
+		buckets, hashTime, hashGroupTime = driver.Step2Chan(trees, *hashWorkers)
 
 	case *hashWorkers > 1 && *dataWorkers == *hashWorkers:
 		// Step 2B: per spec — hash workers update shared map guarded by a single global mutex
 		// fmt.Printf("entering step2 mutexes\n")
-		buckets = driver.Step2Mutexes(trees, *hashWorkers)
+		buckets, hashTime, hashGroupTime = driver.Step2Mutexes(trees, *hashWorkers)
 
 	default:
 		// Sensible default: channel collector
-		buckets = driver.Step2Chan(trees, *hashWorkers)
+		buckets, hashTime, hashGroupTime = driver.Step2Chan(trees, *hashWorkers)
 	}
+	//hashTime := time.Since(hashStart)
+	bucketTime := time.Now()
 
+	fmt.Printf("hashTime: %.9f\n", hashTime.Seconds())
+	//fmt.Printf("hashGroupTime: %.9f\n", hashGroupTime.Seconds())
+	//hashGroupStart := time.Now()
 	keys := make([]int, 0, len(buckets))
-	for k := range buckets {
-		if (len(buckets[k]) <= 1) {
-			continue
-		}
-		keys = append(keys, k)
+	hashGroups := make(map[int][]int, len(buckets))
+
+	for h, ids := range buckets {
+		if len(ids) <= 1 { continue }  
+		idsCopy := append([]int(nil), ids...)  // copy so later changes to buckets don't affect you
+		sort.Ints(idsCopy)
+		hashGroups[h] = idsCopy
+		keys = append(keys, h)
 	}
 	sort.Ints(keys)
+	
+	hashGroupTime += time.Since(bucketTime)
+	fmt.Printf("hashGroupTime: %.9f\n", hashGroupTime.Seconds())
 	for _, h := range keys {
-		ids := append([]int(nil), buckets[h]...)
-		sort.Ints(ids)
 		fmt.Printf("%d: ", h)
-		for _, v := range ids {
-			fmt.Printf("%d ", v)
+		for _, id := range hashGroups[h] {
+			fmt.Printf("%d ", id)
 		}
 		fmt.Println()
 	}
+	//hashGroupTime := time.Since(hashGroupStart)
 
 	// 4) Step 3 selection:
 	//fmt.Printf("exited switch\n")
 	//groupIdx := 0
 	var groups [][]int
+	compareStart := time.Now()
 
 	if *compWorkers <= 1 {
 		for _, h := range keys {
@@ -155,8 +144,9 @@ func main() {
 		// adj := driver.Step3Workers(trees, buckets, *compWorkers) //Step 3 implementation B
 		groups = driver.AdjToGroups(adj)
 	}
+	compareTime := time.Since(compareStart)
 	
-	//fmt.Printf("compareTreeTime: %.9f\n", compareTime.Seconds())
+	fmt.Printf("compareTreeTime: %.9f\n", compareTime.Seconds())
 	groupIdx := 0
 	if *compWorkers <= 1 {
 		for _, g := range groups {
@@ -201,6 +191,13 @@ func main() {
 
 	// 5) Convert adj to groups (for the same output format you’ve been using) and print hashes
 	//printOutput(groups, buckets)
+	overallTime := time.Since(overallStart)
+	totalTime := buildTime + hashTime + compareTime
+
+	fmt.Printf("Overall_Time,Total_Time,Build_Time,Hash_time,Compare_Time\n")
+	fmt.Printf("%.9f,%.9f,%.9f,%.9f,%.9f\n", overallTime.Seconds(), totalTime.Seconds(), 
+		buildTime.Seconds(), hashTime.Seconds(), compareTime.Seconds())
+
 
 	fmt.Printf("Processed %d trees.\n", n)
 }

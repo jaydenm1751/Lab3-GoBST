@@ -39,18 +39,62 @@ func (t *Tree) Insert(k int){
 	}
 }
 
-func (t *Tree) Equal(n *Tree) bool {
-	return equalNodes(t.root, n.root)
+type inOrderIter struct {
+	stack []*node
 }
 
-func equalNodes(a, b *node) bool {
-	if a == nil && b == nil { return true }
-	if a == nil || b == nil { return false }
-
-	if a.key != b.key { return false }
-
-	return equalNodes(a.left, b.left) && equalNodes(a.right, b.right)
+func (it *inOrderIter) pushLeft(n *node) {
+	for n != nil {
+		it.stack = append(it.stack, n)
+		n = n.left
+	}
 }
+
+func newIter(root *node) *inOrderIter {
+	it := &inOrderIter{}
+	it.pushLeft(root)
+	return it
+}
+func (t *Tree) Equal(other *Tree) bool {
+	it1 := newIter(t.root)
+	it2 := newIter(other.root)
+
+	for {
+		v1, valid1 := it1.next()
+		v2, valid2 := it2.next()
+
+		if valid1 != valid2 {
+			return false
+		}
+		if !valid1 && !valid2 {
+			return true
+		}
+		if v1 != v2 {
+			return false
+		}
+
+	}
+}
+
+func (it *inOrderIter) next() (int, bool) {
+	if (len(it.stack) == 0) {
+		return 0, false
+	}
+	n := it.stack[len(it.stack) - 1]
+	it.stack = it.stack[:len(it.stack) - 1]
+	val := n.key
+	it.pushLeft(n.right)
+	return val, true
+}
+
+// func equalNodes(a, b *node) bool {
+// 	if a == nil && b == nil { return true }
+// 	if a == nil || b == nil { return false }
+
+// 	if a.key != b.key { return false }
+
+// 	return equalNodes(a.left, b.left) && equalNodes(a.right, b.right)
+// }
 
 func (t *Tree) HashValue() int {
     hash := 1

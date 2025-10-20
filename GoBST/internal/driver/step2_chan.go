@@ -9,11 +9,11 @@ type hashRes struct {
 	id, h int
 }
 
-func Step2Chan(trees []*bst.Tree, hashWorkers int) (map[int][]int, []int) {
+func Step2Chan(trees []*bst.Tree, hashWorkers int) map[int][]int {
 	n := len(trees)
 	out := make(chan hashRes, n)
 	jobs  := make(chan int, n)
-	hashes := make([]int, n)
+	// hashes := make([]int, n)
 	buckets := make(map[int][]int) //return
 
 	var wg sync.WaitGroup
@@ -37,8 +37,8 @@ func Step2Chan(trees []*bst.Tree, hashWorkers int) (map[int][]int, []int) {
 	}()
 
 	for r := range out {
-		hashes[r.id] = r.h
+		//hashes[r.id] = r.h
 		buckets[r.h] = append(buckets[r.h], r.id)
 	}
-	return buckets, hashes
+	return buckets
 }

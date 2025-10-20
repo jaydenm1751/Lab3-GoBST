@@ -51,44 +51,30 @@ func AdjToGroups(adj [][]bool) [][]int {
 }
 
 
-func CompareSequential(lines [][]int, trees []*bst.Tree, buckets map[int][]int) [][]int {
-	n := len(lines)
-	groups := make([][]int, n)
-	visited := make([]bool, n)
-	for _, list := range buckets {
-		for _, i := range list {
-			if visited[i] {
-				continue;
-			}
-			visited[i] = true
-			eq := []int{i}
-			for _, j := range list {
-				if i == j || visited[j] {
-					continue
-				}
-				if trees[i].Equal(trees[j]){
-					visited[j] = true
-					eq = append(eq, j)
-				}
-			}
-			//sort.Ints(eq)
-			for _, k := range eq {
-				// groups[k] = append([]int(nil), eq...)
-				groups[k] = eq
+func CompareBucketSequential(trees []*bst.Tree, ids []int) [][]int {
+	if len(ids) == 0 { 
+		return nil 
+	} else if len(ids) == 1 {
+		return [][]int{{ids[0]}}
+	}
+	sort.Ints(ids)
+
+	used := make(map[int]bool, len(ids))
+	groups := make([][]int, 0)
+
+	for _, i := range ids {
+		if used[i] { continue }
+		used[i] = true
+		cls := []int{i}
+		for _, j := range ids {
+			if j == i || used[j] { continue }
+			if trees[i].Equal(trees[j]) {
+				used[j] = true
+				cls = append(cls, j)
 			}
 		}
+		sort.Ints(cls)
+		groups = append(groups, cls)
 	}
-	// fmt.Println("== Step 1 Results ==")
-	// for i := 0; i < n; i++ {
-	// 	///sort.Ints(groups[i])
-	// 	fmt.Printf("%d: %v\n", i, groups[i])
-	// 	//fmt.Printf("%d: hash=%03d identical=%v\n", i, hashes[i], groups[i])
-	// }
-	// for i := 0; i < n; i++ {
-	// 	///sort.Ints(groups[i])
-	// 	fmt.Printf("%d: %v\n", i , hashes[i])
-	// 	//fmt.Printf("%d: hash=%03d identical=%v\n", i, hashes[i], groups[i])
-	// }
-
 	return groups
 }

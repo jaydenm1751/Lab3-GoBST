@@ -140,6 +140,7 @@ func main() {
 			groups = append(groups, gs...) // append classes
 		}
 	} else  if *compWorkers <= 0{ //implementation A
+		//fmt.Printf("compWorkers: %v\n", *compWorkers)
 		adj := driver.Step3Simple(trees, buckets) // Step 3 implementation A
 		groups = driver.AdjToGroups(adj)
 	} else { //implementation B
@@ -150,7 +151,7 @@ func main() {
 	
 	fmt.Printf("compareTreeTime: %.9f\n", compareTime.Seconds())
 	groupIdx := 0
-	if *compWorkers <= 1 {
+	if *compWorkers == 1 {
 		for _, g := range groups {
 			if len(g) <= 1 { continue }
 			fmt.Printf("group %d: ", groupIdx)

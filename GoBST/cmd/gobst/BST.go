@@ -46,17 +46,17 @@ func main() {
 		return
 	}
 
-	overallStart := time.Now()
+	//overallStart := time.Now()
 
 	// 2) Build trees (you said you’re keeping parallel build — that’s fine)
-	buildStart := time.Now()
+	//buildStart := time.Now()
 	var trees []*bst.Tree
 	if *dataWorkers > 1 {
 		trees = driver.BuildTreesParallel(lines, *dataWorkers) // MUST be exported
 	} else {
 		trees = driver.BuildTreesSequential(lines) // MUST be exported
 	}
-	buildTime := time.Since(buildStart)
+	//buildTime := time.Since(buildStart)
 
 	// 3) Step 2 selection (per your mapping in the spec):
 	//hashStart := time.Now()
@@ -194,13 +194,13 @@ func main() {
 
 	// 5) Convert adj to groups (for the same output format you’ve been using) and print hashes
 	//printOutput(groups, buckets)
-	overallTime := time.Since(overallStart)
-	totalTime := buildTime + hashTime + compareTime + hashGroupTime
+	// overallTime := time.Since(overallStart)
+	// totalTime := buildTime + hashTime + compareTime + hashGroupTime
 
-	fmt.Printf("Overall_Time,Total_Time,Build_Time,Hash_time,HashGroup_Time,Compare_Time\n")
-	fmt.Printf("%.9f,%.9f,%.9f,%.9f,%.9f,%.9f\n", overallTime.Seconds(), totalTime.Seconds(), 
-		buildTime.Seconds(), hashTime.Seconds(), hashGroupTime.Seconds(), compareTime.Seconds())
+	// fmt.Printf("Overall_Time,Total_Time,Build_Time,Hash_time,HashGroup_Time,Compare_Time\n")
+	// fmt.Printf("%.9f,%.9f,%.9f,%.9f,%.9f,%.9f\n", overallTime.Seconds(), totalTime.Seconds(), 
+	// 	buildTime.Seconds(), hashTime.Seconds(), hashGroupTime.Seconds(), compareTime.Seconds())
 
 
-	fmt.Printf("Processed %d trees.\n", n)
+	// fmt.Printf("Processed %d trees.\n", n)
 }
